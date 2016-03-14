@@ -1,0 +1,5 @@
+welcome to my github
+This is a project predicting film rating mainly using SVD
+first, preprocess the data in originalData, and the form of data is also here
+second, SVD
+finally, map result to filmID and  userID
