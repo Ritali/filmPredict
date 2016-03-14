@@ -1,12 +1,16 @@
 #!/usr/bin/python
 #-*- coding: UTF-8 -*-
 
+#author：RitaLi
+#time：2016-03-14
+#
 import math
 import random
 import cPickle as pickle
 import collections
 
-iter_number = 10 
+iter_number = 50 #迭代次数
+
 def ReadFile(fileName):
 	'''open file'''
 	fi = open(fileName, 'r')
@@ -52,7 +56,7 @@ def PredictScore(av, bu, bi, pu, qi):
 	return pScore
 
 step_record = open('model/step_record','w')
-def SVD(configureFile, testDataFile, trainDataFile, modelSaveFile):
+def SVD(configureFile, validateDataFile, trainDataFile, modelSaveFile):
 	#get the configure
 	fi = open(configureFile, 'r')
 	line = fi.readline()
@@ -79,10 +83,10 @@ def SVD(configureFile, testDataFile, trainDataFile, modelSaveFile):
 		print step
 		count = 0
 		step_record.write('loop '+str(step)+'\n')
-		for line in trainDataFile:
+		for line in trainDataFile:#预测
 			count = count + 1
-			if count % 10000 == 0:
-				print count
+			# if count % 10000 == 0:
+			# 	print count
 			arr = line.split()
 			uid = int(arr[0].strip())
 			iid = int(arr[1].strip())
@@ -95,20 +99,20 @@ def SVD(configureFile, testDataFile, trainDataFile, modelSaveFile):
 			if step == iter_number:
 				step_record.write(str(score)+'\t'+str(prediction)+'\n')
 			#update parameters
-			#bu[uid] += learnRate * (eui - regularization * bu[uid])
-			#bi[iid] += learnRate * (eui - regularization * bi[iid])	
+			bu[uid] += learnRate * (eui - regularization * bu[uid])
+			bi[iid] += learnRate * (eui - regularization * bi[iid])	
 			for k in range(factorNum):
 				temp = pu[uid][k]	#attention here, must save the value of pu before updating
 				pu[uid][k] += learnRate * (eui * qi[iid][k] - regularization * pu[uid][k])
 				qi[iid][k] += learnRate * (eui * temp - regularization * qi[iid][k])
 		#fi.close()
-		#learnRate *= 0.9
-		#curRmse = Validate(testDataFile, averageScore, bu, bi, pu, qi)
-		#print("test_RMSE in step %d: %f" %(step, curRmse))
-		#if curRmse >= preRmse:
-		#	break
-		#else:
-		#	preRmse = curRmse
+		learnRate *= 0.9
+		curRmse = Validate(validateDataFile, averageScore, bu, bi, pu, qi)
+		print("test_RMSE in step %d: %f" %(step, curRmse))
+		if curRmse >= preRmse:
+			break
+		else:
+			preRmse = curRmse
     
 	#write the model to files
 	fo = file(modelSaveFile, 'wb')
